@@ -2,6 +2,7 @@ class ChatUserModel {
   String email;
   bool isConnected;
   bool hasPartner;
+  String connectionId;
 
   ChatUserModel({this.email, this.isConnected, this.hasPartner});
 
@@ -9,6 +10,7 @@ class ChatUserModel {
     email = json['email'];
     isConnected = json['isConnected'];
     hasPartner = json['hasPartner'];
+    connectionId = json['connectionId'];
   }
 
   Map<String, dynamic> toJson() {
@@ -16,6 +18,7 @@ class ChatUserModel {
     data['email'] = this.email;
     data['isConnected'] = this.isConnected;
     data['hasPartner'] = this.hasPartner;
+    data['connectionId'] = this.connectionId;
     return data;
   }
 }

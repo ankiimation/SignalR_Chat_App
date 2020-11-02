@@ -19,27 +19,25 @@ class ListUsersPage extends StatefulWidget {
 
 class _ListUsersPageState extends State<ListUsersPage> {
   List<ChatUserModel> chatModels = [];
-  StreamController chatUsersStreamController = BehaviorSubject();
+  bool searching = false;
 
-  getUsers() async {
-    final response =
-        await http.get('https://ankiisignalrtest.azurewebsites.net/api/apihome', headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': 'Bearer ${widget.loginModel.idToken}',
-    });
+  Future<List<ChatUserModel>> getUsers() async {
+    final response = await http.get(
+        'https://ankiisignalrtest.azurewebsites.net/api/apihome',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${widget.loginModel.idToken}',
+        });
     if (response.statusCode == 200) {
       var listJson = jsonDecode(response.body.toString());
       var listUsers =
           (listJson as List).map((e) => ChatUserModel.fromJson(e)).toList();
-      setState(() {
-        chatModels = listUsers;
-      });
+      chatModels = listUsers;
     } else {
-      setState(() {
-        chatModels = [];
-      });
+      chatModels = [];
     }
+    return chatModels;
   }
 
   @override
@@ -52,7 +50,6 @@ class _ListUsersPageState extends State<ListUsersPage> {
   @override
   void dispose() {
     // TODO: implement dispose
-    chatUsersStreamController.close();
     super.dispose();
   }
 
@@ -65,47 +62,80 @@ class _ListUsersPageState extends State<ListUsersPage> {
           style: TextStyle(fontSize: 10),
         ),
         actions: [
-          IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                getUsers();
-              })
+          // IconButton(
+          //     icon: Icon(Icons.refresh),
+          //     onPressed: () {
+          //       getUsers();
+          //     }),
+          // IconButton(
+          //     icon: Icon(Icons.search),
+          //     onPressed: () async {
+          //       var users = await getUsers();
+          //       if (users.length > 0) {
+          //         users.shuffle();
+          //         await Navigator.push(
+          //             context,
+          //             MaterialPageRoute(
+          //                 builder: (_) => ClientChatPage(
+          //                       loginModel: widget.loginModel,
+          //                       chatUserModel: users[0],
+          //                     )));
+          //       } else {
+          //         await Navigator.push(
+          //             context,
+          //             MaterialPageRoute(
+          //                 builder: (_) => HostChatPage(widget.loginModel)));
+          //       }
+          //     })
         ],
       ),
-      body: Container(
-        padding: EdgeInsets.all(20),
-        child: ListView(
-          children: chatModels
-              .map((e) => InkWell(
-                    onTap: () async {
-                      await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => ClientChatPage(
-                                    loginModel: widget.loginModel,
-                                    chatUserModel: e,
-                                  )));
-                      getUsers();
-                    },
-                    child: Card(
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        child: Text(e.email),
-                      ),
-                    ),
-                  ))
-              .toList(),
-        ),
+      body: Center(
+        child: searching
+            ? CircularProgressIndicator()
+            : MaterialButton(
+                color: Colors.blue,
+                shape: CircleBorder(),
+                padding: EdgeInsets.all(20),
+                child: Icon(
+                  Icons.search,
+                  size: 100,
+                  color: Colors.white,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    searching = true;
+                  });
+                  var users = await getUsers();
+                  if (users.length > 0) {
+                    users.shuffle();
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ClientChatPage(
+                                  loginModel: widget.loginModel,
+                                  chatUserModel: users[0],
+                                )));
+                  } else {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => HostChatPage(widget.loginModel)));
+                  }
+                  setState(() {
+                    searching = false;
+                  });
+                },
+              ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => HostChatPage(widget.loginModel)));
-        },
-        child: Icon(Icons.message),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     await Navigator.push(
+      //         context,
+      //         MaterialPageRoute(
+      //             builder: (_) => HostChatPage(widget.loginModel)));
+      //   },
+      //   child: Icon(Icons.message),
+      // ),
     );
   }
 }

@@ -8,5 +8,6 @@ namespace SignalRTest.Models
         public string Email { get; set; }
         public bool IsConnected { get; set; }
         public bool HasPartner { get; set; }
+        public string ConnectionId { get; set; }
     }
 }

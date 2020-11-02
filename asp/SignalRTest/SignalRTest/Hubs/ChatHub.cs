@@ -13,14 +13,28 @@ namespace SignalRTest.Hubs
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ChatHub : Hub
     {
+        private static List<String> connectionIds = new List<String>();
         public SIGNALR_CHAT_TESTContext context = new SIGNALR_CHAT_TESTContext();
         public void SendMessage(string partnerEmail, string message)
         {
             String myEmail = Context.User.Claims.FirstOrDefault(c => c.Type.Equals("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")).Value;
             var partner = context.ChatUser.FirstOrDefault(u => u.Email.Equals(partnerEmail));
-            if (partner != null && partner.IsConnected && partner.HasPartner)
+            if (partner != null )
             {
-                Clients.Groups(partnerEmail, myEmail).SendAsync("ReceiveMessage", "ReceiveMessage", myEmail, message);
+                if (partner.IsConnected && partner.HasPartner&&connectionIds.Contains(partner.ConnectionId) && connectionIds.Contains(Context.ConnectionId))
+                {
+                    Clients.Groups(partnerEmail, myEmail).SendAsync("ReceiveMessage", "ReceiveMessage", myEmail, message);
+                }
+                else
+                {
+                    DisconnectWithPartner(partner.Email);
+
+                }
+            }
+            else
+            {
+                disconnect();
+                Clients.Groups(myEmail).SendAsync("ReceiveMessage", "DisconnectWithPartner",myEmail);
             }
 
         }
@@ -30,14 +44,25 @@ namespace SignalRTest.Hubs
             String myEmail = Context.User.Claims.FirstOrDefault(c => c.Type.Equals("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress")).Value;
             var me = context.ChatUser.FirstOrDefault(u => u.Email.Equals(myEmail));
             var partner = context.ChatUser.FirstOrDefault(u => u.Email.Equals(partnerEmail));
-            if (partner != null && me != null)
+            if (partner != null && me != null && !partner.Email.Equals(me.Email))
             {
-                me.HasPartner = true;
-                partner.HasPartner = true;
-                context.ChatUser.Update(me);
-                context.ChatUser.Update(partner);
-                context.SaveChanges();
-                Clients.Groups(me.Email, partner.Email).SendAsync("ReceiveMessage", "ConnectWithPartner", me.Email);
+                if (connectionIds.Contains(partner.ConnectionId) && connectionIds.Contains(me.ConnectionId))
+                {
+                    me.HasPartner = true;
+                    partner.HasPartner = true;
+                    context.ChatUser.Update(me);
+                    context.ChatUser.Update(partner);
+                    context.SaveChanges();
+                    Clients.Groups(me.Email, partner.Email).SendAsync("ReceiveMessage", "ConnectWithPartner", me.Email);
+                }
+                else
+                {
+                    DisconnectWithPartner(partner.Email);
+                }
+            }
+            else
+            {
+                DisconnectWithPartner(partner.Email);
             }
         }
         public void DisconnectWithPartner(String partnerEmail)
@@ -80,6 +105,7 @@ namespace SignalRTest.Hubs
             if (user == null)
             {
                 user = new ChatUser();
+                user.ConnectionId = Context.ConnectionId;
                 user.Email = identityEmail;
                 user.IsConnected = true;
                 user.HasPartner = false;
@@ -88,6 +114,7 @@ namespace SignalRTest.Hubs
             }
             else
             {
+                user.ConnectionId = Context.ConnectionId;
                 user.IsConnected = true;
                 user.HasPartner = false;
                 context.ChatUser.Update(user);
@@ -97,7 +124,26 @@ namespace SignalRTest.Hubs
 
             //chat
             Groups.AddToGroupAsync(Context.ConnectionId, user.Email);
+            if (!connectionIds.Contains(Context.ConnectionId))
+            {
+                connectionIds.Add(Context.ConnectionId);
+            }
             return base.OnConnectedAsync();
+        }
+        public override Task OnDisconnectedAsync(Exception exception)
+        {
+            connectionIds.Remove(Context.ConnectionId);
+            var user = context.ChatUser.FirstOrDefault(u => u.ConnectionId.Equals(Context.ConnectionId));
+            if (user != null)
+            {
+                user.HasPartner = false;
+                user.IsConnected = false;
+                context.ChatUser.Update(user);
+                context.SaveChanges();
+            }
+
+
+            return base.OnDisconnectedAsync(exception);
         }
 
     }

@@ -16,7 +16,7 @@ namespace SignalRTest.Controllers
         [HttpGet]
         public IActionResult getOnlineUser()
         {
-            var users = (new SIGNALR_CHAT_TESTContext()).ChatUser.Where(u=>u.IsConnected && !u.HasPartner).ToList();
+            var users = (new SIGNALR_CHAT_TESTContext()).ChatUser.Where(u=>u.IsConnected && !u.HasPartner && u.ConnectionId!=null).ToList();
             return Ok(users);
         }
     }

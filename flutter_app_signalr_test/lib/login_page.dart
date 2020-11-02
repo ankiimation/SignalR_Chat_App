@@ -12,8 +12,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  var usernameController = TextEditingController(text: "khoa1@gmail.com");
-  var password = TextEditingController();
+  bool loading = false;
+  var usernameController = TextEditingController();
+  var passwordController = TextEditingController();
 
   Future<FirebaseLoginModel> login() async {
     final url =
@@ -22,13 +23,29 @@ class _LoginPageState extends State<LoginPage> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": usernameController.text,
-          "password": "mysecretpassword",
+          "password": passwordController.text,
           "returnSecureToken": "true"
         }));
     if (result.statusCode == 200) {
       return FirebaseLoginModel.fromJson(jsonDecode(result.body.toString()));
     }
     return null;
+  }
+
+  Future<bool> signUp() async {
+    final url =
+        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCqxEKgBq_m0t7-BigpXrd4acZSRLbVijo";
+    var result = await http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": usernameController.text,
+          "password": passwordController.text,
+          "returnSecureToken": "true"
+        }));
+    if (result.statusCode == 200) {
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -52,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                 height: 10,
               ),
               TextFormField(
-                controller: password,
+                controller: passwordController,
                 decoration: InputDecoration(
                     labelText: 'Password',
                     filled: true,
@@ -62,23 +79,46 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(
                 height: 20,
               ),
-              RaisedButton(
-                onPressed: () async {
-                  var user = await login();
-                  if (user != null) {
-                    Navigator.pushReplacement(context,
-                        MaterialPageRoute(builder: (_) => ListUsersPage(user)));
-                  } else {
-                    showDialog(
-                        context: context,
-                        child: SimpleDialog(
-                          title: Text('Fail'),
-                          contentPadding: EdgeInsets.all(20),
-                        ));
-                  }
-                },
-                child: Text('Login'),
-              )
+              loading
+                  ? Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : RaisedButton(
+                      onPressed: () async {
+                        setState(() {
+                          loading = true;
+                        });
+                        var user = await login();
+                        if (user != null) {
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => ListUsersPage(user)));
+                        } else {
+                          bool register = await signUp();
+                          if (register) {
+                            var user = await login();
+                            if (user != null) {
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => ListUsersPage(user)));
+                            }
+                          } else {
+                            showDialog(
+                                context: context,
+                                child: SimpleDialog(
+                                  children: [Text('Đăng nhập thất bại!')],
+                                  contentPadding: EdgeInsets.all(20),
+                                ));
+                          }
+                        }
+                        setState(() {
+                          loading = false;
+                        });
+                      },
+                      child: Text('Login'),
+                    )
             ],
           ),
         ));

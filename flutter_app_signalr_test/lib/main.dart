@@ -12,6 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -38,4 +39,5 @@ const String RECEIVE_MESSAGE = "ReceiveMessage";
 const String CONNECT_WITH_PARTNER = "ConnectWithPartner";
 const String DISCONNECT_WITH_PARTNER = "DisconnectWithPartner";
 const String DISCONNECT = "disconnect";
-const String DOMAIN = "https://ankiisignalrtest.azurewebsites.net";
+const String DOMAIN =
+  "https://ankiisignalrtest.azurewebsites.net"; // "http://10.0.2.2:60033"; //

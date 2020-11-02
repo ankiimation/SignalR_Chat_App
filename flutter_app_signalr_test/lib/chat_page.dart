@@ -5,6 +5,9 @@ import 'package:flutter_app_signalr_test/models/chat_model.dart';
 import 'package:flutter_app_signalr_test/models/firebase_login_model.dart';
 import 'package:signalr_core/signalr_core.dart';
 
+import 'host_chat_page.dart';
+import 'models/message_model.dart';
+import 'models/message_model.dart';
 import 'models/message_model.dart';
 
 class ClientChatPage extends StatefulWidget {
@@ -31,7 +34,6 @@ class _ClientChatPageState extends State<ClientChatPage> {
       connection.invoke(DISCONNECT);
       connection.stop();
     }
-    Navigator.pop(context);
   }
 
   connect() async {
@@ -59,7 +61,7 @@ class _ClientChatPageState extends State<ClientChatPage> {
   _onMessage(List arguments) {
     if (arguments.length == 3) {
       if (arguments.first == RECEIVE_MESSAGE) {
-        messages.add(MessageModel(
+        messages.add(ChatMessageModel(
             from: arguments[1],
             content: arguments.last,
             dateTime: DateTime.now()));
@@ -71,16 +73,20 @@ class _ClientChatPageState extends State<ClientChatPage> {
     if (arguments.length == 2) {
       if (arguments.first == CONNECT_WITH_PARTNER) {
         currentChatUser = widget.chatUserModel;
+        messages.add(MessageModel(
+            dateTime: DateTime.now(),
+            content: 'Chat with ${currentChatUser.email}'));
       }
     }
   }
 
-  _onDisconnectWithPartner(List arguments) {
+  _onDisconnectWithPartner(List arguments) async {
     if (arguments.length == 2) {
       if (arguments.first == DISCONNECT_WITH_PARTNER) {
-        currentChatUser = null;
+        print('dissconnected');
         messages = [];
         disconnect();
+        Navigator.popUntil(context, (route) => route.isFirst);
       }
     }
   }
@@ -111,6 +117,7 @@ class _ClientChatPageState extends State<ClientChatPage> {
                 icon: Icon(Icons.close),
                 onPressed: () {
                   disconnect();
+                  Navigator.pop(context);
                 }),
             title: currentChatUser != null ? Text(currentChatUser.email) : null,
           ),
@@ -130,10 +137,7 @@ class _ClientChatPageState extends State<ClientChatPage> {
     return currentChatUser == null
         ? Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              Text('Dang tim nguoi chat')
-            ],
+            children: [CircularProgressIndicator(), Text('Dang Ket Noi')],
           )
         : ListView(
             children: messages.map((e) => __buildMessage(e)).toList(),
@@ -143,9 +147,12 @@ class _ClientChatPageState extends State<ClientChatPage> {
   Widget __buildMessage(MessageModel messageModel) {
     return Container(
       margin: EdgeInsets.all(10),
-      alignment: messageModel.from == widget.loginModel.email
-          ? Alignment.centerRight
-          : Alignment.centerLeft,
+      alignment: !(messageModel is ChatMessageModel)
+          ? Alignment.center
+          : messageModel is ChatMessageModel &&
+                  messageModel.from == widget.loginModel.email
+              ? Alignment.centerRight
+              : Alignment.centerLeft,
       child: Column(
         children: [
           Text(
@@ -175,7 +182,7 @@ class _ClientChatPageState extends State<ClientChatPage> {
                 ),
                 IconButton(
                     icon: Icon(Icons.send),
-                    onPressed: () {
+                    onPressed: () async {
                       if (connection != null) {
                         connection.invoke(SEND_MESSAGE,
                             args: [currentChatUser.email, controller.text]);
