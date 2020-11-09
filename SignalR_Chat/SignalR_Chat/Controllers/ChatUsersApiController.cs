@@ -20,11 +20,11 @@ namespace SignalR_Chat.Controllers
             context = new signalrtestContext();
         }
 
-        [HttpGet("{connectionId}")]
+        [HttpGet("{connectionIdorEmail}")]
 
-        public IActionResult getUserViaConnectionId(string connectionId)
+        public IActionResult getUserViaConnectionId(string connectionIdorEmail)
         {
-            var result = context.ChatUser.FirstOrDefault(u => u.ConnectionId.Equals(connectionId));
+            var result = context.ChatUser.FirstOrDefault(u => u.ConnectionId.Equals(connectionIdorEmail) || u.Email.Equals(connectionIdorEmail));
             if (result == null)
             {
                 return NotFound();
@@ -46,6 +46,8 @@ namespace SignalR_Chat.Controllers
                     current.Avatar = user.Avatar;
                     current.Nickname = user.Nickname;
                     current.ConnectionId = user.ConnectionId;
+                    current.Age = user.Age;
+                    current.Gender = user.Gender;
                     context.ChatUser.Update(current);
                 }
                 else

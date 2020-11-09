@@ -9,5 +9,7 @@ namespace SignalR_Chat.Models
         public string Nickname { get; set; }
         public string Avatar { get; set; }
         public string ConnectionId { get; set; }
+        public int? Gender { get; set; }
+        public int? Age { get; set; }
     }
 }

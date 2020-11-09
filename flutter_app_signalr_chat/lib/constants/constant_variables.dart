@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-const String CHAT_HUB_URL = "https://ankiisignalrtest.azurewebsites.net/chatHub";
-const String CHAT_USER_API = "https://ankiisignalrtest.azurewebsites.net/api/chatusersapi";
+const String DOMAIN = "https://ankiisignalrtest.azurewebsites.net";//"http://10.0.3.2:54334";
+const String CHAT_HUB_URL = DOMAIN + "/chatHub";
+const String CHAT_USER_API = DOMAIN + "/api/chatusersapi";
 
 const MaterialColor mainMaterialColor = Colors.blue;
 const Color WHITE = Colors.white;

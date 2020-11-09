@@ -39,6 +39,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    getPartnerChatUserInfo();
     widget.connection.on('ReceiveMessage', (arguments) {
       print('MESSAGE: $arguments');
       if (arguments is List && arguments.isNotEmpty) {
@@ -56,8 +57,6 @@ class _ChatPageState extends State<ChatPage> {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
     });
-
-    getPartnerChatUserInfo();
   }
 
   @override
@@ -117,7 +116,6 @@ class _ChatPageState extends State<ChatPage> {
                                   widget.connection.invoke('RemoveFromRoom',
                                       args: [widget.connection.connectionId]);
                                   widget.connection.stop();
-
                                   Navigator.popUntil(
                                       context, (route) => route.isFirst);
                                 },

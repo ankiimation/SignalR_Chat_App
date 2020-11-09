@@ -37,9 +37,15 @@ namespace SignalR_Chat.Models
                     .HasColumnName("email")
                     .HasMaxLength(320);
 
+                entity.Property(e => e.Age).HasColumnName("age");
+
                 entity.Property(e => e.Avatar).HasColumnName("avatar");
 
                 entity.Property(e => e.ConnectionId).HasColumnName("connectionId");
+
+                entity.Property(e => e.Gender)
+                    .HasColumnName("gender")
+                    .HasDefaultValueSql("((0))");
 
                 entity.Property(e => e.Nickname)
                     .HasColumnName("nickname")

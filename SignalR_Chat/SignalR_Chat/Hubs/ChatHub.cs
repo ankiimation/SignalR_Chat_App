@@ -60,8 +60,11 @@ namespace SignalR_Chat.Hubs
         }
         public void AddToRoom(string member1, string member2)
         {
-            rooms.Add(member1 + member2);
-            Clients.Clients(member1, member2).SendAsync("AddToRoom", member1, member2);
+            if (!rooms.Contains(member1) && !rooms.Contains(member2))
+            {
+                rooms.Add(member1 + member2);
+                Clients.Clients(member1, member2).SendAsync("AddToRoom", member1, member2);
+            }
         }
         public void RemoveFromRoom(string member1Or2)
         {
